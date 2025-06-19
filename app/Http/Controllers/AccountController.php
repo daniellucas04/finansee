@@ -60,7 +60,37 @@ class AccountController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->merge([
+            'balance' => str_replace(['R$', ' ', '.', ','], ['', '', '', '.'], $request->balance)
+        ]);
+
+        $validated = $request->validate([
+            'user_id' => 'required|int',
+            'name' => 'required|string',
+            'balance' => 'required|numeric|min:0'
+        ]);
+
+        $account = new Account();
+        $account = $account->find($id);
+        if ($account->update([...$validated, 'updated_at' => now()])) {
+            Swal::toastSuccess([
+                'title' => 'Success',
+                'text' => 'Account has been updated',
+                'timer' => 2000,
+                'position' => 'top-end',
+                'showConfirmButton' => false,
+            ]);
+            return redirect()->back();
+        }
+
+        Swal::toastError([
+            'title' => 'Error',
+            'text' => 'Unable to udpate the account',
+            'timer' => 2000,
+            'position' => 'top-end',
+            'showConfirmButton' => false,
+        ]);
+        return redirect()->back();
     }
 
     /**
