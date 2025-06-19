@@ -68,6 +68,24 @@ class AccountController extends Controller
      */
     public function destroy(string $id)
     {
-        dd($id);
+        if (Account::destroy($id)) {
+            Swal::toastSuccess([
+                'title' => 'Success',
+                'text' => 'Account has been deleted',
+                'timer' => 2000,
+                'position' => 'top-end',
+                'showConfirmButton' => false,
+            ]);
+            return redirect()->back();
+        }
+        
+        Swal::toastError([
+            'title' => 'Error',
+            'text' => 'Unable to delete the account',
+            'timer' => 2000,
+            'position' => 'top-end',
+            'showConfirmButton' => false,
+        ]);
+        return redirect()->back();
     }
 }

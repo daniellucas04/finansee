@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Account') }}
+            {{ __('Accounts') }}
         </h2>
     </x-slot>
 
@@ -55,13 +55,12 @@
                                                 {{ __('Edit') }}
                                             </x-dropdown-link>
                                         
-                                            <x-dropdown-link class="text-red-500 hover:text-red-400 transition-colors duration-300">
-                                                <form action="{{ route('destroy.account', $account->id) }}" method="post">
+                                            <x-dropdown-link onclick="confirmDelete({{ $account->id }})" class="text-red-500 hover:text-red-400 transition-colors duration-300 cursor-pointer">
+                                                {{ __('Delete') }}
+
+                                                <form id="form-delete-{{ $account->id }}"  action="{{ route('destroy.account', $account->id) }}" method="post">
                                                     @csrf
                                                     @method('delete')
-                                                    <button>
-                                                        {{ __('Delete') }}
-                                                    </button>
                                                 </form>
                                             </x-dropdown-link>
                                         </x-slot>
@@ -133,7 +132,7 @@
                 <input type="hidden" name="user_id" value="{{ Auth::user()->id }}">
             </div>
         </main>
-        
+
         <footer class="flex gap-4 justify-end py-2 px-6 bg-gray-50 border rounded-b-md">
             <button class="bg-red-500 text-white hover:bg-red-600 hover:text-zinc-100 transition-colors duration-300 py-1 px-6 rounded-full" type="button" onclick="closeModal('modal_new-account')">Cancel</button>
             <button class="bg-blue-500 text-white hover:bg-blue-600 hover:text-zinc-100 transition-colors duration-300 py-1 px-6 rounded-full">Create</button>
@@ -150,7 +149,6 @@
             mask: 'R$ num', 
             blocks: {
                 num: {
-                    // Configuração de número
                     mask: Number,
                     thousandsSeparator: '.',
                     radix: ',', // separador decimal
@@ -166,6 +164,7 @@
 </script>
 
 {{-- Modal --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     const overlay = document.getElementById('modal_overlay');
 
@@ -188,5 +187,22 @@
             modal.classList.add('hidden');
             overlay.classList.add('hidden');
         }, 300); // Tempo igual ao da animação 'modal-out'
+    }
+
+    function confirmDelete(id) {
+        Swal.fire({
+            title: 'Warning!',
+            text: "This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Delete',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('form-delete-' + id).submit();
+            }
+        })
     }
 </script>
