@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -17,4 +18,10 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         ->name('store', 'store.account')
         ->name('update', 'update.account')
         ->name('destroy', 'destroy.account');
+
+    Route::resource('/categories', CategoryController::class)
+        ->name('index', 'category')
+        ->name('store', 'store.category')
+        ->name('update', 'update.category')
+        ->name('destroy', 'destroy.category');
 });

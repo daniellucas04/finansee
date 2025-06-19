@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Accounts') }}
+            {{ __('Categories') }}
         </h2>
     </x-slot>
 
@@ -9,10 +9,10 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-xl sm:rounded-md">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-medium p-8">Your accounts</h3>
+                    <h3 class="text-lg font-medium p-8">Your categories</h3>
                     <section class="mx-4">
-                        <button class="flex items-center gap-2 text-white py-2 px-4 rounded-md gradient-primary" onclick="toggleModal('modal_new-account')">
-                            <x-heroicon-s-plus-circle /> New account
+                        <button class="flex items-center gap-2 text-white py-2 px-4 rounded-md gradient-primary" onclick="toggleModal('modal_new-category')">
+                            <x-heroicon-s-plus-circle /> New category
                         </button>
                     </section>
                 </div>
@@ -21,25 +21,21 @@
                     <thead>
                         <tr class="bg-gray-100">
                             <th class="px-8 py-1 text-start">Name</th>
-                            <th class="px-8 py-1 text-start">Balance</th>
+                            <th class="px-8 py-1 text-start">Type</th>
                             <th class="px-8 py-1 text-start">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($accounts as $account)
-                            @php
-                            $numberFormatter = new NumberFormatter('pt-BR', NumberFormatter::CURRENCY);
-                            $account->balance = $numberFormatter->format($account->balance);
-                            @endphp
+                        @forelse ($categories as $category)
                             <tr class="border-b">
                                 <td class="flex items-center gap-4 p-8 text-start">
                                     <span class="text-lg">
-                                        {{ $account->name }}
+                                        {{ $category->name }}
                                     </span>
                                 </td>
                                 <td class="px-8 py-4 text-start">
-                                    <span class="rounded-lg p-2 text-emerald-500 font-bold hover:text-emerald-400 transition-colors duration-300 cursor-default">
-                                        {{ $account->balance }}
+                                    <span class="{{ $category->type == 'Expense' ? 'bg-red-500' : 'bg-emerald-500' }} text-white rounded-full py-1 px-2 transition-colors duration-300 cursor-default">
+                                        {{ $category->type }}
                                     </span>
                                 </td>
                                 <td class="px-8 py-4 text-start">
@@ -51,14 +47,14 @@
                                         </x-slot>
         
                                         <x-slot name="content">
-                                            <x-dropdown-link onclick="toggleModal('modal_edit-account#{{ $account->id }}')" class="cursor-pointer">
+                                            <x-dropdown-link onclick="toggleModal('modal_edit-category#{{ $category->id }}')" class="cursor-pointer">
                                                 {{ __('Edit') }}
                                             </x-dropdown-link>
                                         
-                                            <x-dropdown-link onclick="confirmDelete({{ $account->id }})" class="text-red-500 hover:text-red-400 transition-colors duration-300 cursor-pointer">
+                                            <x-dropdown-link onclick="confirmDelete({{ $category->id }})" class="text-red-500 hover:text-red-400 transition-colors duration-300 cursor-pointer">
                                                 {{ __('Delete') }}
 
-                                                <form id="form-delete-{{ $account->id }}"  action="{{ route('destroy.account', $account->id) }}" method="post">
+                                                <form id="form-delete-{{ $category->id }}"  action="{{ route('destroy.category', $category->id) }}" method="post">
                                                     @csrf
                                                     @method('delete')
                                                 </form>
@@ -66,24 +62,29 @@
                                         </x-slot>
                                     </x-dropdown>
 
-                                    {{-- Edit Account Modal --}}
-                                    <form id="modal_edit-account#{{ $account->id }}" action="{{ route('update.account', $account->id) }}" class="hidden fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-md shadow-lg border w-[90%] max-w-lg" method="post">
+                                    {{-- Edit Category Modal --}}
+                                    <form id="modal_edit-category#{{ $category->id }}" action="{{ route('update.category', $category->id) }}" class="hidden fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-md shadow-lg border w-[90%] max-w-lg" method="post">
                                         @csrf
                                         @method('put')
                                         <header class="bg-white border rounded-md rounded-b-none py-2 px-6">
-                                            <h3 class="text-xl">Edit your account</h3>
+                                            <h3 class="text-xl">Edit your category</h3>
                                         </header>
 
                                         <main class="bg-white border-l border-r px-4 py-8">
                                             <div class="flex gap-4 my-2">
                                                 <div class="flex flex-col flex-auto">
                                                     <label for="name">Name</label>
-                                                    <input type="text" name="name" value="{{ $account->name }}" class="rounded-full py-1">
+                                                    <input type="text" name="name" value="{{ $category->name }}" class="rounded-full py-1">
                                                 </div>
 
                                                 <div class="flex flex-col flex-auto">
-                                                    <label for="balance">Balance</label>
-                                                    <input type="text" name="balance" value="{{ $account->balance }}" class="rounded-full py-1">
+                                                    <label for="type">Type</label>
+                                                    <input list="types" id="category_types" name="type" value="{{ $category->type }}" class="rounded-full py-1">
+
+                                                    <datalist id="types">
+                                                        <option value="Income"></option>
+                                                        <option value="Expense"></option>
+                                                    </datalist>
                                                 </div>
 
                                                 <input type="hidden" name="user_id" value="{{ Auth::user()->id }}">
@@ -91,14 +92,14 @@
                                         </main>
                                         
                                         <footer class="flex gap-4 justify-end py-2 px-6 bg-gray-50 border rounded-b-md">
-                                            <button class="bg-red-500 text-white hover:bg-red-600 hover:text-zinc-100 transition-colors duration-300 py-1 px-6 rounded-full" type="button" onclick="closeModal('modal_edit-account#{{ $account->id }}')">Cancel</button>
+                                            <button class="bg-red-500 text-white hover:bg-red-600 hover:text-zinc-100 transition-colors duration-300 py-1 px-6 rounded-full" type="button" onclick="closeModal('modal_edit-category#{{ $category->id }}')">Cancel</button>
                                             <button class="bg-blue-500 text-white hover:bg-blue-600 hover:text-zinc-100 transition-colors duration-300 py-1 px-6 rounded-full">Save</button>
                                         </footer>
                                     </form>
                                 </td>
                             </tr>
                         @empty
-                            <div class="m-4 text-center gradient-primary p-4 rounded-md text-white">Accounts not found</div>
+                            <div class="m-4 text-center gradient-primary p-4 rounded-md text-white">Categories not found</div>
                         @endforelse
                     </tbody>
                 </table>
@@ -109,12 +110,12 @@
     {{-- Modal Overlay --}}
     <div id="modal_overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40"></div>
 
-    {{-- New Account Modal --}}
-    <form id="modal_new-account" action="{{ route('store.account') }}" class="hidden fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-md shadow-lg border w-[90%] max-w-lg" method="post">
+    {{-- New Category Modal --}}
+    <form id="modal_new-category" action="{{ route('store.category') }}" class="hidden fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-md shadow-lg border w-[90%] max-w-lg" method="post">
         @csrf
         @method('post')
         <header class="bg-white border rounded-md rounded-b-none py-2 px-6">
-            <h3 class="text-xl">New account</h3>
+            <h3 class="text-xl">New category</h3>
         </header>
 
         <main class="bg-white border-l border-r px-4 py-8">
@@ -125,8 +126,13 @@
                 </div>
 
                 <div class="flex flex-col flex-auto">
-                    <label for="balance">Balance</label>
-                    <input type="text" name="balance" class="rounded-full py-1">
+                    <label for="type">Type</label>
+                    <input list="types" id="category_types" name="type" class="rounded-full py-1">
+
+                    <datalist id="types">
+                        <option value="Income"></option>
+                        <option value="Expense"></option>
+                    </datalist>
                 </div>
 
                 <input type="hidden" name="user_id" value="{{ Auth::user()->id }}">
@@ -134,34 +140,11 @@
         </main>
 
         <footer class="flex gap-4 justify-end py-2 px-6 bg-gray-50 border rounded-b-md">
-            <button class="bg-red-500 text-white hover:bg-red-600 hover:text-zinc-100 transition-colors duration-300 py-1 px-6 rounded-full" type="button" onclick="closeModal('modal_new-account')">Cancel</button>
+            <button class="bg-red-500 text-white hover:bg-red-600 hover:text-zinc-100 transition-colors duration-300 py-1 px-6 rounded-full" type="button" onclick="closeModal('modal_new-category')">Cancel</button>
             <button class="bg-blue-500 text-white hover:bg-blue-600 hover:text-zinc-100 transition-colors duration-300 py-1 px-6 rounded-full">Create</button>
         </footer>
     </form>
 </x-app-layout>
-
-<script src="https://unpkg.com/imask"></script>
-{{-- Mask --}}
-<script>
-    const inputs = document.querySelectorAll("input[name='balance']");
-    inputs.forEach(item => {
-        const mask = IMask(item, {
-            mask: 'R$ num', 
-            blocks: {
-                num: {
-                    mask: Number,
-                    thousandsSeparator: '.',
-                    radix: ',', // separador decimal
-                    mapToRadix: ['.'], // aceita tanto ponto quanto vírgula na digitação
-                    scale: 2, // 2 casas decimais
-                    signed: false, // permite número negativo? (false = não)
-                    padFractionalZeros: true, // preenche zeros até duas casas
-                    normalizeZeros: true, 
-                }
-            }
-        })
-    });
-</script>
 
 {{-- Modal --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
