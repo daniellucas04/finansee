@@ -1,0 +1,192 @@
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Account') }}
+        </h2>
+    </x-slot>
+
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white shadow-xl sm:rounded-md">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium p-8">Your accounts</h3>
+                    <section class="mx-4">
+                        <button class="flex items-center gap-2 text-white py-2 px-4 rounded-md gradient-primary" onclick="toggleModal('modal_new-account')">
+                            <x-heroicon-s-plus-circle /> New account
+                        </button>
+                    </section>
+                </div>
+                    
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="px-8 py-1 text-start">Name</th>
+                            <th class="px-8 py-1 text-start">Balance</th>
+                            <th class="px-8 py-1 text-start">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($accounts as $account)
+                            @php
+                            $numberFormatter = new NumberFormatter('pt-BR', NumberFormatter::CURRENCY);
+                            $account->balance = $numberFormatter->format($account->balance);
+                            @endphp
+                            <tr class="border-b">
+                                <td class="flex items-center gap-4 p-8 text-start">
+                                    <span class="text-lg">
+                                        {{ $account->name }}
+                                    </span>
+                                </td>
+                                <td class="px-8 py-4 text-start">
+                                    <span class="rounded-lg p-2 text-emerald-500 font-bold hover:text-emerald-400 transition-colors duration-300 cursor-default">
+                                        {{ $account->balance }}
+                                    </span>
+                                </td>
+                                <td class="px-8 py-4 text-start">
+                                    <x-dropdown align="left" width="40">
+                                        <x-slot name="trigger">
+                                            <button id class="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition">
+                                                <x-heroicon-o-ellipsis-horizontal class="w-8 h-8 text-gray-500 hover:text-gray-600 transition-colors duration-300"/>
+                                            </button>
+                                        </x-slot>
+        
+                                        <x-slot name="content">
+                                            <x-dropdown-link onclick="toggleModal('modal_edit-account#{{ $account->id }}')" class="cursor-pointer">
+                                                {{ __('Edit') }}
+                                            </x-dropdown-link>
+                                        
+                                            <x-dropdown-link class="text-red-500 hover:text-red-400 transition-colors duration-300">
+                                                <form action="{{ route('destroy.account', $account->id) }}" method="post">
+                                                    @csrf
+                                                    @method('delete')
+                                                    <button>
+                                                        {{ __('Delete') }}
+                                                    </button>
+                                                </form>
+                                            </x-dropdown-link>
+                                        </x-slot>
+                                    </x-dropdown>
+
+                                    {{-- Edit Account Modal --}}
+                                    <form id="modal_edit-account#{{ $account->id }}" action="{{ route('update.account', $account->id) }}" class="hidden fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-md shadow-lg border w-[90%] max-w-lg" method="post">
+                                        @csrf
+                                        @method('put')
+                                        <header class="bg-white border rounded-md rounded-b-none py-2 px-6">
+                                            <h3 class="text-xl">Edit your account</h3>
+                                        </header>
+
+                                        <main class="bg-white border-l border-r px-4 py-8">
+                                            <div class="flex gap-4 my-2">
+                                                <div class="flex flex-col flex-auto">
+                                                    <label for="name">Name</label>
+                                                    <input type="text" name="name" value="{{ $account->name }}" class="rounded-full py-1">
+                                                </div>
+
+                                                <div class="flex flex-col flex-auto">
+                                                    <label for="balance">Balance</label>
+                                                    <input type="text" name="balance" value="{{ $account->balance }}" class="rounded-full py-1">
+                                                </div>
+
+                                                <input type="hidden" name="user_id" value="{{ Auth::user()->id }}">
+                                            </div>
+                                        </main>
+                                        
+                                        <footer class="flex gap-4 justify-end py-2 px-6 bg-gray-50 border rounded-b-md">
+                                            <button class="bg-red-500 text-white hover:bg-red-600 hover:text-zinc-100 transition-colors duration-300 py-1 px-6 rounded-full" type="button" onclick="closeModal('modal_edit-account#{{ $account->id }}')">Cancel</button>
+                                            <button class="bg-blue-500 text-white hover:bg-blue-600 hover:text-zinc-100 transition-colors duration-300 py-1 px-6 rounded-full">Save</button>
+                                        </footer>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <div class="gradient-primary p-4 rounded-md text-white">Sem contas</div>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Overlay --}}
+    <div id="modal_overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40"></div>
+
+    {{-- New Account Modal --}}
+    <form id="modal_new-account" action="{{ route('store.account') }}" class="hidden fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-md shadow-lg border w-[90%] max-w-lg" method="post">
+        @csrf
+        @method('post')
+        <header class="bg-white border rounded-md rounded-b-none py-2 px-6">
+            <h3 class="text-xl">New account</h3>
+        </header>
+
+        <main class="bg-white border-l border-r px-4 py-8">
+            <div class="flex gap-4 my-2">
+                <div class="flex flex-col flex-auto">
+                    <label for="name">Name</label>
+                    <input type="text" name="name" class="rounded-full py-1">
+                </div>
+
+                <div class="flex flex-col flex-auto">
+                    <label for="balance">Balance</label>
+                    <input type="text" name="balance" class="rounded-full py-1">
+                </div>
+
+                <input type="hidden" name="user_id" value="{{ Auth::user()->id }}">
+            </div>
+        </main>
+        
+        <footer class="flex gap-4 justify-end py-2 px-6 bg-gray-50 border rounded-b-md">
+            <button class="bg-red-500 text-white hover:bg-red-600 hover:text-zinc-100 transition-colors duration-300 py-1 px-6 rounded-full" type="button" onclick="closeModal('modal_new-account')">Cancel</button>
+            <button class="bg-blue-500 text-white hover:bg-blue-600 hover:text-zinc-100 transition-colors duration-300 py-1 px-6 rounded-full">Create</button>
+        </footer>
+    </form>
+</x-app-layout>
+
+<script src="https://unpkg.com/imask"></script>
+{{-- Mask --}}
+<script>
+    const inputs = document.querySelectorAll("input[name='balance']");
+    inputs.forEach(item => {
+        const mask = IMask(item, {
+            mask: 'R$ num', 
+            blocks: {
+                num: {
+                    // Configuração de número
+                    mask: Number,
+                    thousandsSeparator: '.',
+                    radix: ',', // separador decimal
+                    mapToRadix: ['.'], // aceita tanto ponto quanto vírgula na digitação
+                    scale: 2, // 2 casas decimais
+                    signed: false, // permite número negativo? (false = não)
+                    padFractionalZeros: true, // preenche zeros até duas casas
+                    normalizeZeros: true, 
+                }
+            }
+        })
+    });
+</script>
+
+{{-- Modal --}}
+<script>
+    const overlay = document.getElementById('modal_overlay');
+
+    function toggleModal(id) {
+        const modal = document.getElementById(id);
+        overlay.classList.remove('hidden');
+        
+        modal.classList.remove('hidden', 'modal-leave');
+        modal.classList.add('modal-enter');
+    }
+    
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+
+        modal.classList.remove('modal-enter');
+        modal.classList.add('modal-leave');
+
+        // Espera a animação terminar antes de esconder
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            overlay.classList.add('hidden');
+        }, 300); // Tempo igual ao da animação 'modal-out'
+    }
+</script>
